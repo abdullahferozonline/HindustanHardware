@@ -7,7 +7,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -18,7 +18,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,6 +32,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,7 +46,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.Stroke
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -54,6 +54,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+
+private val Navy = Color(0xFF07111F)
+private val Navy2 = Color(0xFF0D1B2A)
+private val Saffron = Color(0xFFFFA726)
+private val Gold = Color(0xFFFFC107)
+private val White = Color(0xFFF8FAFC)
+private val Muted = Color(0xFFB8C4D4)
 
 class MainActivity : ComponentActivity() {
 
@@ -66,14 +73,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private val Navy = Color(0xFF07111F)
-private val Navy2 = Color(0xFF0D1B2A)
-private val Saffron = Color(0xFFFFA726)
-private val Gold = Color(0xFFFFC107)
-private val White = Color(0xFFF8FAFC)
-private val Muted = Color(0xFFB8C4D4)
-private val Green = Color(0xFF2E9B63)
-
 @Composable
 fun HindustanHardwareApp() {
 
@@ -82,9 +81,11 @@ fun HindustanHardwareApp() {
     }
 
     if (!splashFinished) {
-        AnimatedSplash {
-            splashFinished = true
-        }
+        AnimatedSplash(
+            onFinished = {
+                splashFinished = true
+            }
+        )
     } else {
         WelcomeScreen()
     }
@@ -100,6 +101,7 @@ private fun AnimatedSplash(
     }
 
     LaunchedEffect(Unit) {
+
         delay(350)
         scene = 1
 
@@ -118,7 +120,7 @@ private fun AnimatedSplash(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    listOf(
+                    colors = listOf(
                         Navy,
                         Navy2,
                         Color(0xFF101D2F)
@@ -130,28 +132,43 @@ private fun AnimatedSplash(
 
         AnimatedVisibility(
             visible = scene >= 1,
-            enter = fadeIn(tween(800)) + scaleIn(tween(900)),
-            exit = fadeOut(tween(400))
+            enter = fadeIn(
+                animationSpec = tween(800)
+            ) + scaleIn(
+                animationSpec = tween(900)
+            ),
+            exit = fadeOut(
+                animationSpec = tween(400)
+            )
         ) {
             IndiaGlow()
         }
 
         AnimatedVisibility(
             visible = scene >= 2,
-            enter = fadeIn(tween(700)) + scaleIn(tween(700)),
-            exit = fadeOut(tween(350))
+            enter = fadeIn(
+                animationSpec = tween(700)
+            ) + scaleIn(
+                animationSpec = tween(700)
+            ),
+            exit = fadeOut(
+                animationSpec = tween(350)
+            )
         ) {
             BrandSplash()
         }
 
         AnimatedVisibility(
             visible = scene >= 3,
-            enter = fadeIn(tween(600)) +
-                    slideInVertically(
-                        initialOffsetY = { 80 },
-                        animationSpec = tween(700)
-                    ),
-            exit = fadeOut(tween(300))
+            enter = fadeIn(
+                animationSpec = tween(600)
+            ) + slideInVertically(
+                initialOffsetY = { 80 },
+                animationSpec = tween(700)
+            ),
+            exit = fadeOut(
+                animationSpec = tween(300)
+            )
         ) {
             FinalSplash()
         }
@@ -161,15 +178,18 @@ private fun AnimatedSplash(
 @Composable
 private fun IndiaGlow() {
 
-    val infinite = rememberInfiniteTransition(
+    val infiniteTransition = rememberInfiniteTransition(
         label = "indiaGlow"
     )
 
-    val pulse by infinite.animateFloat(
-        initialValue = 0.85f,
+    val pulse by infiniteTransition.animateFloat(
+        initialValue = 0.90f,
         targetValue = 1.08f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1300, easing = FastOutSlowInEasing),
+            animation = tween(
+                durationMillis = 1300,
+                easing = FastOutSlowInEasing
+            ),
             repeatMode = RepeatMode.Reverse
         ),
         label = "pulse"
@@ -192,28 +212,92 @@ private fun IndiaGlow() {
 
                 val path = Path()
 
-                path.moveTo(size.width * .45f, .04f)
-                path.lineTo(size.width * .57f, .15f)
-                path.lineTo(size.width * .67f, .22f)
-                path.lineTo(size.width * .62f, .33f)
-                path.lineTo(size.width * .73f, .42f)
-                path.lineTo(size.width * .65f, .52f)
-                path.lineTo(size.width * .59f, .65f)
-                path.lineTo(size.width * .51f, .76f)
-                path.lineTo(size.width * .47f, .94f)
-                path.lineTo(size.width * .41f, .79f)
-                path.lineTo(size.width * .33f, .69f)
-                path.lineTo(size.width * .29f, .54f)
-                path.lineTo(size.width * .20f, .46f)
-                path.lineTo(size.width * .28f, .35f)
-                path.lineTo(size.width * .24f, .24f)
-                path.lineTo(size.width * .37f, .19f)
+                path.moveTo(
+                    size.width * 0.45f,
+                    size.height * 0.04f
+                )
+
+                path.lineTo(
+                    size.width * 0.57f,
+                    size.height * 0.15f
+                )
+
+                path.lineTo(
+                    size.width * 0.67f,
+                    size.height * 0.22f
+                )
+
+                path.lineTo(
+                    size.width * 0.62f,
+                    size.height * 0.33f
+                )
+
+                path.lineTo(
+                    size.width * 0.73f,
+                    size.height * 0.42f
+                )
+
+                path.lineTo(
+                    size.width * 0.65f,
+                    size.height * 0.52f
+                )
+
+                path.lineTo(
+                    size.width * 0.59f,
+                    size.height * 0.65f
+                )
+
+                path.lineTo(
+                    size.width * 0.51f,
+                    size.height * 0.76f
+                )
+
+                path.lineTo(
+                    size.width * 0.47f,
+                    size.height * 0.94f
+                )
+
+                path.lineTo(
+                    size.width * 0.41f,
+                    size.height * 0.79f
+                )
+
+                path.lineTo(
+                    size.width * 0.33f,
+                    size.height * 0.69f
+                )
+
+                path.lineTo(
+                    size.width * 0.29f,
+                    size.height * 0.54f
+                )
+
+                path.lineTo(
+                    size.width * 0.20f,
+                    size.height * 0.46f
+                )
+
+                path.lineTo(
+                    size.width * 0.28f,
+                    size.height * 0.35f
+                )
+
+                path.lineTo(
+                    size.width * 0.24f,
+                    size.height * 0.24f
+                )
+
+                path.lineTo(
+                    size.width * 0.37f,
+                    size.height * 0.19f
+                )
+
                 path.close()
 
                 drawPath(
                     path = path,
                     brush = Brush.verticalGradient(
-                        listOf(
+                        colors = listOf(
                             Color(0xFFFF9933),
                             Color.White,
                             Color(0xFF138808)
@@ -225,9 +309,14 @@ private fun IndiaGlow() {
                 )
 
                 drawCircle(
-                    color = Color(0xFF4D7CFE).copy(alpha = .25f),
-                    radius = size.minDimension * .48f,
-                    center = center,
+                    color = Color(0xFF4D7CFE).copy(
+                        alpha = 0.25f
+                    ),
+                    radius = size.minDimension * 0.48f,
+                    center = Offset(
+                        size.width / 2f,
+                        size.height / 2f
+                    ),
                     style = Stroke(
                         width = 2.dp.toPx()
                     )
@@ -235,7 +324,9 @@ private fun IndiaGlow() {
             }
         }
 
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(
+            modifier = Modifier.height(18.dp)
+        )
 
         Text(
             text = "MADE IN INDIA",
@@ -258,7 +349,9 @@ private fun BrandSplash() {
             modifier = Modifier.size(96.dp)
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(
+            modifier = Modifier.height(24.dp)
+        )
 
         Text(
             text = "Hindustan",
@@ -289,7 +382,9 @@ private fun FinalSplash() {
             modifier = Modifier.size(82.dp)
         )
 
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(
+            modifier = Modifier.height(18.dp)
+        )
 
         Text(
             text = "Hindustan Hardware",
@@ -299,7 +394,9 @@ private fun FinalSplash() {
             fontFamily = FontFamily.Cursive
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(
+            modifier = Modifier.height(8.dp)
+        )
 
         Text(
             text = "SMART INVENTORY",
@@ -309,7 +406,9 @@ private fun FinalSplash() {
             fontWeight = FontWeight.Bold
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(
+            modifier = Modifier.height(20.dp)
+        )
 
         Text(
             text = "Simple • Fast • Offline",
@@ -327,17 +426,17 @@ private fun LogoMark(
     Box(
         modifier = modifier
             .background(
-                Brush.linearGradient(
-                    listOf(
+                brush = Brush.linearGradient(
+                    colors = listOf(
                         Color(0xFF162A42),
                         Color(0xFF0A1727)
                     )
                 ),
-                RoundedCornerShape(26.dp)
+                shape = RoundedCornerShape(26.dp)
             )
             .border(
                 width = 1.dp,
-                color = Saffron.copy(alpha = .55f),
+                color = Saffron.copy(alpha = 0.55f),
                 shape = RoundedCornerShape(26.dp)
             ),
         contentAlignment = Alignment.Center
@@ -354,6 +453,10 @@ private fun LogoMark(
                 fontWeight = FontWeight.ExtraBold
             )
 
+            Spacer(
+                modifier = Modifier.height(4.dp)
+            )
+
             Box(
                 modifier = Modifier
                     .size(
@@ -361,8 +464,8 @@ private fun LogoMark(
                         height = 3.dp
                     )
                     .background(
-                        Saffron,
-                        RoundedCornerShape(20.dp)
+                        color = Saffron,
+                        shape = RoundedCornerShape(20.dp)
                     )
             )
         }
@@ -372,16 +475,19 @@ private fun LogoMark(
 @Composable
 private fun WelcomeScreen() {
 
-    val infinite = rememberInfiniteTransition(
-        label = "welcome"
+    val infiniteTransition = rememberInfiniteTransition(
+        label = "welcomeGlow"
     )
 
-    val glow by infinite.animateFloat(
-        initialValue = .35f,
-        targetValue = .75f,
+    val glow by infiniteTransition.animateFloat(
+        initialValue = 0.35f,
+        targetValue = 0.75f,
         animationSpec = infiniteRepeatable(
-            tween(1800, easing = LinearEasing),
-            RepeatMode.Reverse
+            animation = tween(
+                durationMillis = 1800,
+                easing = LinearEasing
+            ),
+            repeatMode = RepeatMode.Reverse
         ),
         label = "glow"
     )
@@ -391,7 +497,7 @@ private fun WelcomeScreen() {
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    listOf(
+                    colors = listOf(
                         Navy,
                         Color(0xFF0B1727),
                         Color(0xFF07111F)
@@ -406,7 +512,9 @@ private fun WelcomeScreen() {
         verticalArrangement = Arrangement.SpaceBetween
     ) {
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(
+            modifier = Modifier.height(20.dp)
+        )
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
@@ -424,7 +532,9 @@ private fun WelcomeScreen() {
                 )
             }
 
-            Spacer(modifier = Modifier.height(22.dp))
+            Spacer(
+                modifier = Modifier.height(22.dp)
+            )
 
             Text(
                 text = "Hindustan Hardware",
@@ -435,7 +545,9 @@ private fun WelcomeScreen() {
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(
+                modifier = Modifier.height(10.dp)
+            )
 
             Text(
                 text = "YOUR STOCK. SIMPLIFIED.",
@@ -456,7 +568,9 @@ private fun WelcomeScreen() {
                 description = "Add products manually, by photo or barcode"
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(
+                modifier = Modifier.height(16.dp)
+            )
 
             FeatureLine(
                 icon = "⌁",
@@ -464,7 +578,9 @@ private fun WelcomeScreen() {
                 description = "Your inventory stays on your phone"
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(
+                modifier = Modifier.height(16.dp)
+            )
 
             FeatureLine(
                 icon = "✓",
@@ -513,8 +629,8 @@ private fun FeatureLine(
             modifier = Modifier
                 .size(44.dp)
                 .background(
-                    Color.White.copy(alpha = .06f),
-                    RoundedCornerShape(14.dp)
+                    color = Color.White.copy(alpha = 0.06f),
+                    shape = RoundedCornerShape(14.dp)
                 ),
             contentAlignment = Alignment.Center
         ) {
@@ -527,7 +643,9 @@ private fun FeatureLine(
             )
         }
 
-        Spacer(modifier = Modifier.size(14.dp))
+        Spacer(
+            modifier = Modifier.size(14.dp)
+        )
 
         Column(
             modifier = Modifier.weight(1f)
