@@ -28,7 +28,7 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v5
         with:
-          gradle-version: '9.8'
+          gradle-version: '9.8.0'
 
       - name: Build Debug APK
         run: gradle assembleDebug --stacktrace
