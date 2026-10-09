@@ -46,7 +46,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.Stroke
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -81,11 +80,9 @@ fun HindustanHardwareApp() {
     }
 
     if (!splashFinished) {
-        AnimatedSplash(
-            onFinished = {
-                splashFinished = true
-            }
-        )
+        AnimatedSplash {
+            splashFinished = true
+        }
     } else {
         WelcomeScreen()
     }
@@ -132,43 +129,28 @@ private fun AnimatedSplash(
 
         AnimatedVisibility(
             visible = scene >= 1,
-            enter = fadeIn(
-                animationSpec = tween(800)
-            ) + scaleIn(
-                animationSpec = tween(900)
-            ),
-            exit = fadeOut(
-                animationSpec = tween(400)
-            )
+            enter = fadeIn(tween(800)) + scaleIn(tween(900)),
+            exit = fadeOut(tween(400))
         ) {
             IndiaGlow()
         }
 
         AnimatedVisibility(
             visible = scene >= 2,
-            enter = fadeIn(
-                animationSpec = tween(700)
-            ) + scaleIn(
-                animationSpec = tween(700)
-            ),
-            exit = fadeOut(
-                animationSpec = tween(350)
-            )
+            enter = fadeIn(tween(700)) + scaleIn(tween(700)),
+            exit = fadeOut(tween(350))
         ) {
             BrandSplash()
         }
 
         AnimatedVisibility(
             visible = scene >= 3,
-            enter = fadeIn(
-                animationSpec = tween(600)
-            ) + slideInVertically(
-                initialOffsetY = { 80 },
-                animationSpec = tween(700)
-            ),
-            exit = fadeOut(
-                animationSpec = tween(300)
-            )
+            enter = fadeIn(tween(600)) +
+                    slideInVertically(
+                        initialOffsetY = { 80 },
+                        animationSpec = tween(700)
+                    ),
+            exit = fadeOut(tween(300))
         ) {
             FinalSplash()
         }
@@ -212,86 +194,22 @@ private fun IndiaGlow() {
 
                 val path = Path()
 
-                path.moveTo(
-                    size.width * 0.45f,
-                    size.height * 0.04f
-                )
-
-                path.lineTo(
-                    size.width * 0.57f,
-                    size.height * 0.15f
-                )
-
-                path.lineTo(
-                    size.width * 0.67f,
-                    size.height * 0.22f
-                )
-
-                path.lineTo(
-                    size.width * 0.62f,
-                    size.height * 0.33f
-                )
-
-                path.lineTo(
-                    size.width * 0.73f,
-                    size.height * 0.42f
-                )
-
-                path.lineTo(
-                    size.width * 0.65f,
-                    size.height * 0.52f
-                )
-
-                path.lineTo(
-                    size.width * 0.59f,
-                    size.height * 0.65f
-                )
-
-                path.lineTo(
-                    size.width * 0.51f,
-                    size.height * 0.76f
-                )
-
-                path.lineTo(
-                    size.width * 0.47f,
-                    size.height * 0.94f
-                )
-
-                path.lineTo(
-                    size.width * 0.41f,
-                    size.height * 0.79f
-                )
-
-                path.lineTo(
-                    size.width * 0.33f,
-                    size.height * 0.69f
-                )
-
-                path.lineTo(
-                    size.width * 0.29f,
-                    size.height * 0.54f
-                )
-
-                path.lineTo(
-                    size.width * 0.20f,
-                    size.height * 0.46f
-                )
-
-                path.lineTo(
-                    size.width * 0.28f,
-                    size.height * 0.35f
-                )
-
-                path.lineTo(
-                    size.width * 0.24f,
-                    size.height * 0.24f
-                )
-
-                path.lineTo(
-                    size.width * 0.37f,
-                    size.height * 0.19f
-                )
-
+                path.moveTo(size.width * 0.45f, size.height * 0.04f)
+                path.lineTo(size.width * 0.57f, size.height * 0.15f)
+                path.lineTo(size.width * 0.67f, size.height * 0.22f)
+                path.lineTo(size.width * 0.62f, size.height * 0.33f)
+                path.lineTo(size.width * 0.73f, size.height * 0.42f)
+                path.lineTo(size.width * 0.65f, size.height * 0.52f)
+                path.lineTo(size.width * 0.59f, size.height * 0.65f)
+                path.lineTo(size.width * 0.51f, size.height * 0.76f)
+                path.lineTo(size.width * 0.47f, size.height * 0.94f)
+                path.lineTo(size.width * 0.41f, size.height * 0.79f)
+                path.lineTo(size.width * 0.33f, size.height * 0.69f)
+                path.lineTo(size.width * 0.29f, size.height * 0.54f)
+                path.lineTo(size.width * 0.20f, size.height * 0.46f)
+                path.lineTo(size.width * 0.28f, size.height * 0.35f)
+                path.lineTo(size.width * 0.24f, size.height * 0.24f)
+                path.lineTo(size.width * 0.37f, size.height * 0.19f)
                 path.close()
 
                 drawPath(
@@ -309,9 +227,7 @@ private fun IndiaGlow() {
                 )
 
                 drawCircle(
-                    color = Color(0xFF4D7CFE).copy(
-                        alpha = 0.25f
-                    ),
+                    color = Color(0xFF4D7CFE).copy(alpha = 0.25f),
                     radius = size.minDimension * 0.48f,
                     center = Offset(
                         size.width / 2f,
