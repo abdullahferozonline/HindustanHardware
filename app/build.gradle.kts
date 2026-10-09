@@ -1,9 +1,9 @@
 plugins {
     id("com.android.application")
+    id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
-    id("com.google.devtools.ksp") version "2.3.0"
+    id("com.google.devtools.ksp") version "2.3.0" 
 }
-
 android {
     namespace = "com.hindustanhardware.inventory"
     compileSdk = 37
