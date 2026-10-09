@@ -3,88 +3,31 @@ package com.hindustanhardware.inventory
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.slideInVertically
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Inventory2
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hindustanhardware.inventory.data.InventoryViewModel
-import com.hindustanhardware.inventory.data.Product
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.delay
 
 private val Navy = Color(0xFF07111F)
-private val Navy2 = Color(0xFF0D1B2A)
 private val Panel = Color(0xFF142238)
-private val Saffron = Color(0xFFFFA726)
-private val Gold = Color(0xFFFFC107)
+private val Gold = Color(0xFFFFA726)
 private val White = Color(0xFFF8FAFC)
 private val Muted = Color(0xFFB8C4D4)
 private val Green = Color(0xFF46C486)
@@ -99,164 +42,74 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private enum class AppPage {
-    SPLASH,
-    WELCOME,
-    HOME,
-    INVENTORY,
-    ADD_PRODUCT
+private enum class Page {
+    SPLASH, WELCOME, HOME, INVENTORY, ADD
 }
 
 @Composable
 fun HindustanHardwareApp(
-    inventoryViewModel: InventoryViewModel = viewModel()
+    vm: InventoryViewModel = viewModel()
 ) {
-    var page by remember { mutableStateOf(AppPage.SPLASH) }
+    var page by remember { mutableStateOf(Page.SPLASH) }
 
-    androidx.compose.runtime.LaunchedEffect(Unit) {
-        kotlinx.coroutines.delay(3800)
-        page = AppPage.WELCOME
+    LaunchedEffect(Unit) {
+        delay(3000)
+        page = Page.WELCOME
     }
 
     when (page) {
-        AppPage.SPLASH -> SplashScreen()
-        AppPage.WELCOME -> WelcomeScreen {
-            page = AppPage.HOME
+        Page.SPLASH -> SplashScreen()
+        Page.WELCOME -> WelcomeScreen {
+            page = Page.HOME
         }
-        AppPage.HOME -> DashboardScreen(
-            viewModel = inventoryViewModel,
-            onInventory = { page = AppPage.INVENTORY },
-            onAddProduct = { page = AppPage.ADD_PRODUCT }
+        Page.HOME -> Dashboard(
+            vm = vm,
+            onInventory = { page = Page.INVENTORY },
+            onAdd = { page = Page.ADD }
         )
-        AppPage.INVENTORY -> InventoryScreen(
-            viewModel = inventoryViewModel,
-            onBack = { page = AppPage.HOME },
-            onAdd = { page = AppPage.ADD_PRODUCT }
+        Page.INVENTORY -> InventoryScreen(
+            vm = vm,
+            onBack = { page = Page.HOME },
+            onAdd = { page = Page.ADD }
         )
-        AppPage.ADD_PRODUCT -> AddProductScreen(
-            viewModel = inventoryViewModel,
-            onBack = { page = AppPage.HOME }
+        Page.ADD -> AddProductScreen(
+            vm = vm,
+            onBack = { page = Page.INVENTORY }
         )
     }
 }
 
 @Composable
 private fun SplashScreen() {
-    val infinite = rememberInfiniteTransition(label = "splash")
-    val pulse by infinite.animateFloat(
-        0.88f, 1.08f,
-        infiniteRepeatable(
-            tween(1100, easing = FastOutSlowInEasing),
-            RepeatMode.Reverse
-        ),
-        label = "pulse"
-    )
-
     Box(
         Modifier
             .fillMaxSize()
             .background(
-                Brush.verticalGradient(listOf(Navy, Navy2, Color(0xFF162943)))
+                Brush.verticalGradient(
+                    listOf(Navy, Color(0xFF10243B), Navy)
+                )
             ),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            IndiaMark(
-                Modifier
-                    .size(180.dp)
-                    .scale(pulse)
-            )
-
-            Spacer(Modifier.height(24.dp))
-
+            Text("🇮🇳", fontSize = 76.sp)
+            Spacer(Modifier.height(20.dp))
             Text(
                 "Hindustan",
-                color = White,
                 fontSize = 43.sp,
+                color = White,
                 fontFamily = FontFamily.Cursive,
                 fontWeight = FontWeight.Bold
             )
-
             Text(
                 "HARDWARE",
-                color = Saffron,
+                color = Gold,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 5.sp
             )
-
-            Spacer(Modifier.height(18.dp))
-
-            Text(
-                "SMART INVENTORY",
-                color = Muted,
-                fontSize = 12.sp,
-                letterSpacing = 3.sp
-            )
-        }
-    }
-}
-
-@Composable
-private fun IndiaMark(modifier: Modifier = Modifier) {
-    Canvas(modifier) {
-        val path = Path().apply {
-            moveTo(size.width * .45f, size.height * .04f)
-            lineTo(size.width * .58f, size.height * .15f)
-            lineTo(size.width * .68f, size.height * .23f)
-            lineTo(size.width * .62f, size.height * .34f)
-            lineTo(size.width * .73f, size.height * .42f)
-            lineTo(size.width * .64f, size.height * .54f)
-            lineTo(size.width * .58f, size.height * .66f)
-            lineTo(size.width * .51f, size.height * .77f)
-            lineTo(size.width * .47f, size.height * .94f)
-            lineTo(size.width * .40f, size.height * .79f)
-            lineTo(size.width * .32f, size.height * .69f)
-            lineTo(size.width * .28f, size.height * .54f)
-            lineTo(size.width * .19f, size.height * .46f)
-            lineTo(size.width * .28f, size.height * .35f)
-            lineTo(size.width * .24f, size.height * .24f)
-            lineTo(size.width * .37f, size.height * .19f)
-            close()
-        }
-
-        drawPath(
-            path,
-            Brush.verticalGradient(
-                listOf(Color(0xFFFF9933), Color.White, Color(0xFF138808))
-            ),
-            style = Stroke(width = 5.dp.toPx())
-        )
-
-        drawCircle(
-            Color(0xFF4D7CFE).copy(alpha = .3f),
-            size.minDimension * .48f,
-            style = Stroke(width = 2.dp.toPx())
-        )
-    }
-}
-
-@Composable
-private fun LogoMark(modifier: Modifier = Modifier) {
-    Box(
-        modifier
-            .background(Panel, RoundedCornerShape(22.dp))
-            .border(1.dp, Saffron.copy(alpha = .6f), RoundedCornerShape(22.dp)),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                "HH",
-                color = White,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 28.sp
-            )
-            Box(
-                Modifier
-                    .padding(top = 3.dp)
-                    .size(width = 35.dp, height = 3.dp)
-                    .background(Saffron, CircleShape)
-            )
+            Spacer(Modifier.height(15.dp))
+            Text("SMART INVENTORY", color = Muted, letterSpacing = 3.sp)
         }
     }
 }
@@ -266,20 +119,15 @@ private fun WelcomeScreen(onStart: () -> Unit) {
     Column(
         Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(listOf(Navy, Navy2, Color(0xFF07111F)))
-            )
+            .background(Navy)
             .padding(26.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(10.dp))
 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            LogoMark(Modifier.size(110.dp))
-
-            Spacer(Modifier.height(20.dp))
-
+            Text("🇮🇳", fontSize = 66.sp)
             Text(
                 "Hindustan Hardware",
                 color = White,
@@ -288,56 +136,39 @@ private fun WelcomeScreen(onStart: () -> Unit) {
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
-
             Text(
                 "YOUR STOCK. SIMPLIFIED.",
-                color = Saffron,
+                color = Gold,
                 fontSize = 12.sp,
-                letterSpacing = 2.sp,
-                fontWeight = FontWeight.Bold
+                letterSpacing = 2.sp
             )
         }
 
-        Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
-            FeatureLine("✓", "Fast inventory", "Manage products and stock easily")
-            FeatureLine("⌁", "Works offline", "Your inventory stays on your phone")
-            FeatureLine("▣", "Smart stock control", "Find low-stock items quickly")
+        Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+            Feature("✓", "Fast inventory", "Manage hardware products easily")
+            Feature("⌁", "Works offline", "Your data stays on this phone")
+            Feature("▣", "Smart stock control", "Know what is running low")
         }
 
         Button(
             onClick = onStart,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(58.dp),
+            modifier = Modifier.fillMaxWidth().height(58.dp),
             shape = RoundedCornerShape(18.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Saffron,
+                containerColor = Gold,
                 contentColor = Navy
             )
         ) {
-            Text(
-                "GET STARTED",
-                fontWeight = FontWeight.ExtraBold,
-                letterSpacing = 2.sp
-            )
+            Text("GET STARTED", fontWeight = FontWeight.ExtraBold)
         }
     }
 }
 
 @Composable
-private fun FeatureLine(icon: String, title: String, description: String) {
+private fun Feature(icon: String, title: String, description: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            Modifier
-                .size(44.dp)
-                .background(Panel, RoundedCornerShape(14.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(icon, color = Saffron, fontSize = 21.sp)
-        }
-
-        Spacer(Modifier.size(13.dp))
-
+        Text(icon, color = Gold, fontSize = 28.sp)
+        Spacer(Modifier.width(16.dp))
         Column {
             Text(title, color = White, fontWeight = FontWeight.Bold)
             Text(description, color = Muted, fontSize = 12.sp)
@@ -346,202 +177,32 @@ private fun FeatureLine(icon: String, title: String, description: String) {
 }
 
 @Composable
-private fun DashboardScreen(
-    viewModel: InventoryViewModel,
+private fun Dashboard(
+    vm: InventoryViewModel,
     onInventory: () -> Unit,
-    onAddProduct: () -> Unit
-) {
-    val count by viewModel.productCount.collectAsState()
-    val units by viewModel.totalUnits.collectAsState()
-    val inStock by viewModel.inStockCount.collectAsState()
-    val lowStock by viewModel.lowStockCount.collectAsState()
-    val outOfStock by viewModel.outOfStockCount.collectAsState()
-
-    Scaffold(
-        containerColor = Navy,
-        bottomBar = {
-            BottomNavigationBar(
-                selected = "Home",
-                onHome = {},
-                onInventory = onInventory
-            )
-        }
-    ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp)
-        ) {
-            item {
-                Spacer(Modifier.height(12.dp))
-                Header()
-            }
-
-            item {
-                Column {
-                    Text("Good morning 👋", color = White, fontSize = 25.sp, fontWeight = FontWeight.Bold)
-                    Text("Here's your stock overview", color = Muted, fontSize = 14.sp)
-                }
-            }
-
-            item {
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = Panel),
-                    shape = RoundedCornerShape(24.dp)
-                ) {
-                    Column(Modifier.padding(22.dp)) {
-                        Text("TOTAL PRODUCTS", color = Muted, fontSize = 12.sp, letterSpacing = 2.sp)
-                        Spacer(Modifier.height(8.dp))
-                        Text("$count", color = White, fontSize = 43.sp, fontWeight = FontWeight.ExtraBold)
-                        Text("$units total units in inventory", color = Green, fontSize = 13.sp)
-                    }
-                }
-            }
-
-            item {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    StatCard("IN STOCK", inStock, Green, Modifier.weight(1f))
-                    StatCard("LOW STOCK", lowStock, Saffron, Modifier.weight(1f))
-                    StatCard("OUT", outOfStock, Red, Modifier.weight(1f))
-                }
-            }
-
-            item {
-                Text("QUICK ACTIONS", color = Muted, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
-            }
-
-            item {
-                ActionButton(
-                    title = "Add Product",
-                    subtitle = "Enter a new inventory item",
-                    onClick = onAddProduct
-                )
-            }
-
-            item {
-                ActionButton(
-                    title = "View Inventory",
-                    subtitle = "Search and manage your products",
-                    onClick = onInventory
-                )
-            }
-
-            item {
-                Text("Your inventory is stored locally on this phone.", color = Muted, fontSize = 12.sp)
-                Spacer(Modifier.height(12.dp))
-            }
-        }
-    }
-}
-
-@Composable
-private fun Header() {
-    Row(
-        Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        LogoMark(Modifier.size(48.dp))
-        Spacer(Modifier.size(12.dp))
-        Column(Modifier.weight(1f)) {
-            Text("Hindustan Hardware", color = White, fontSize = 19.sp, fontWeight = FontWeight.Bold)
-            Text("SMART INVENTORY", color = Saffron, fontSize = 10.sp, letterSpacing = 2.sp)
-        }
-        Icon(Icons.Default.Inventory2, contentDescription = null, tint = Saffron)
-    }
-}
-
-@Composable
-private fun StatCard(
-    title: String,
-    count: Int,
-    color: Color,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = Panel),
-        shape = RoundedCornerShape(18.dp)
-    ) {
-        Column(Modifier.padding(12.dp)) {
-            Text(title, color = Muted, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(8.dp))
-            Text("$count", color = color, fontSize = 25.sp, fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
-private fun ActionButton(
-    title: String,
-    subtitle: String,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = Panel),
-        shape = RoundedCornerShape(20.dp)
-    ) {
-        Row(
-            Modifier.padding(18.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                Modifier
-                    .size(45.dp)
-                    .background(Saffron.copy(alpha = .14f), RoundedCornerShape(14.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Default.Add, contentDescription = null, tint = Saffron)
-            }
-
-            Spacer(Modifier.size(14.dp))
-
-            Column(Modifier.weight(1f)) {
-                Text(title, color = White, fontWeight = FontWeight.Bold)
-                Text(subtitle, color = Muted, fontSize = 12.sp)
-            }
-        }
-    }
-}
-
-@Composable
-private fun InventoryScreen(
-    viewModel: InventoryViewModel,
-    onBack: () -> Unit,
     onAdd: () -> Unit
 ) {
-    var query by remember { mutableStateOf("") }
-
-    val productsFlow = remember(query) {
-        if (query.isBlank()) {
-            viewModel.products
-        } else {
-            viewModel.searchProducts(query)
-        }
-    }
-
-    val products by productsFlow.collectAsState(initial = emptyList())
+    val count by vm.productCount.collectAsState()
+    val units by vm.totalUnits.collectAsState()
+    val low by vm.lowStockCount.collectAsState()
+    val out by vm.outOfStockCount.collectAsState()
 
     Scaffold(
         containerColor = Navy,
         bottomBar = {
-            BottomNavigationBar(
-                selected = "Inventory",
-                onHome = onBack,
-                onInventory = {}
-            )
-        },
-        floatingActionButton = {
-            androidx.compose.material3.FloatingActionButton(
-                onClick = onAdd,
-                containerColor = Saffron,
-                contentColor = Navy
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add product")
+            NavigationBar(containerColor = Panel) {
+                NavigationBarItem(
+                    selected = true,
+                    onClick = {},
+                    icon = { Icon(Icons.Default.Home, null) },
+                    label = { Text("Home") }
+                )
+                NavigationBarItem(
+                    selected = false,
+                    onClick = onInventory,
+                    icon = { Icon(Icons.Default.Inventory2, null) },
+                    label = { Text("Inventory") }
+                )
             }
         }
     ) { padding ->
@@ -549,133 +210,145 @@ private fun InventoryScreen(
             Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 18.dp)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 15.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = White)
+            Text(
+                "Hindustan Hardware",
+                color = White,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Text("Your shop, organized.", color = Muted)
+
+            Card(colors = CardDefaults.cardColors(containerColor = Panel)) {
+                Column(Modifier.padding(22.dp)) {
+                    Text("TOTAL PRODUCTS", color = Muted, letterSpacing = 2.sp)
+                    Text(
+                        "$count",
+                        color = White,
+                        fontSize = 42.sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                    Text("$units total units", color = Green)
                 }
-                Text("Inventory", color = White, fontSize = 25.sp, fontWeight = FontWeight.Bold)
             }
 
-            OutlinedTextField(
-                value = query,
-                onValueChange = { query = it },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                placeholder = { Text("Search name, SKU or barcode", color = Muted) },
-                leadingIcon = {
-                    Icon(Icons.Default.Search, contentDescription = null, tint = Muted)
-                },
-                colors = fieldColors()
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                SummaryCard("LOW STOCK", low, Gold, Modifier.weight(1f))
+                SummaryCard("OUT OF STOCK", out, Red, Modifier.weight(1f))
+            }
 
-            Spacer(Modifier.height(12.dp))
+            Button(
+                onClick = onAdd,
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Gold, contentColor = Navy)
+            ) {
+                Icon(Icons.Default.Add, null)
+                Spacer(Modifier.width(8.dp))
+                Text("ADD PRODUCT")
+            }
 
-            if (products.isEmpty()) {
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .padding(bottom = 70.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            Icons.Default.Inventory2,
-                            contentDescription = null,
-                            tint = Saffron,
-                            modifier = Modifier.size(54.dp)
-                        )
-                        Spacer(Modifier.height(12.dp))
-                        Text(
-                            if (query.isBlank()) "No products yet" else "No matching products",
-                            color = White,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text("Add your first hardware item.", color = Muted, fontSize = 13.sp)
-                    }
-                }
-            } else {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    items(products, key = { it.id }) { product ->
-                        ProductCard(
-                            product = product,
-                            onDelete = {
-                                viewModel.deleteProduct(product) {}
-                            }
-                        )
-                    }
-                }
+            OutlinedButton(
+                onClick = onInventory,
+                modifier = Modifier.fillMaxWidth().height(56.dp)
+            ) {
+                Icon(Icons.Default.Inventory2, null)
+                Spacer(Modifier.width(8.dp))
+                Text("VIEW INVENTORY")
             }
         }
     }
 }
 
 @Composable
-private fun ProductCard(
-    product: Product,
-    onDelete: () -> Unit
+private fun SummaryCard(
+    title: String,
+    value: Int,
+    color: Color,
+    modifier: Modifier = Modifier
 ) {
-    val stockColor = when {
-        product.quantity <= 0 -> Red
-        product.quantity <= product.minimumStock -> Saffron
-        else -> Green
-    }
-
     Card(
-        colors = CardDefaults.cardColors(containerColor = Panel),
-        shape = RoundedCornerShape(18.dp)
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = Panel)
     ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(15.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Column(Modifier.padding(15.dp)) {
+            Text(title, color = Muted, fontSize = 11.sp)
+            Text("$value", color = color, fontSize = 27.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun InventoryScreen(
+    vm: InventoryViewModel,
+    onBack: () -> Unit,
+    onAdd: () -> Unit
+) {
+    val products by vm.products.collectAsState()
+
+    Scaffold(
+        containerColor = Navy,
+        topBar = {
+            TopAppBar(
+                title = { Text("Inventory") },
+                navigationIcon = {
+                    TextButton(onClick = onBack) {
+                        Text("BACK")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Navy,
+                    titleContentColor = White,
+                    navigationIconContentColor = Gold
+                )
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onAdd,
+                containerColor = Gold,
+                contentColor = Navy
+            ) {
+                Icon(Icons.Default.Add, null)
+            }
+        }
+    ) { padding ->
+        if (products.isEmpty()) {
             Box(
-                Modifier
-                    .size(45.dp)
-                    .background(Navy2, RoundedCornerShape(13.dp)),
+                Modifier.fillMaxSize().padding(padding),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Inventory2, contentDescription = null, tint = Saffron)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(Icons.Default.Inventory2, null, tint = Gold, modifier = Modifier.size(48.dp))
+                    Spacer(Modifier.height(12.dp))
+                    Text("No products yet", color = White)
+                    Text("Tap + to add your first item.", color = Muted)
+                }
             }
-
-            Spacer(Modifier.size(12.dp))
-
-            Column(Modifier.weight(1f)) {
-                Text(
-                    product.name,
-                    color = White,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    "${product.category} • ${product.unit}",
-                    color = Muted,
-                    fontSize = 12.sp
-                )
-                Text(
-                    "Stock: ${product.quantity}",
-                    color = stockColor,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
-                )
-                Text(
-                    "Selling: ₹${"%.2f".format(product.sellingPrice)}",
-                    color = White,
-                    fontSize = 12.sp
-                )
-            }
-
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Red)
+        } else {
+            androidx.compose.foundation.lazy.LazyColumn(
+                Modifier.fillMaxSize().padding(padding)
+            ) {
+                items(products.size) { index ->
+                    val product = products[index]
+                    ListItem(
+                        headlineContent = {
+                            Text(product.name, color = White)
+                        },
+                        supportingContent = {
+                            Text(
+                                "${product.category} • Stock: ${product.quantity}",
+                                color = Muted
+                            )
+                        },
+                        trailingContent = {
+                            Text("₹${product.sellingPrice}", color = Gold)
+                        },
+                        colors = ListItemDefaults.colors(containerColor = Panel)
+                    )
+                    HorizontalDivider(color = Navy)
+                }
             }
         }
     }
@@ -683,262 +356,120 @@ private fun ProductCard(
 
 @Composable
 private fun AddProductScreen(
-    viewModel: InventoryViewModel,
+    vm: InventoryViewModel,
     onBack: () -> Unit
 ) {
     var name by remember { mutableStateOf("") }
+    var category by remember { mutableStateOf("Other") }
     var sku by remember { mutableStateOf("") }
     var barcode by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("Other") }
-    var purchasePrice by remember { mutableStateOf("") }
-    var sellingPrice by remember { mutableStateOf("") }
+    var purchase by remember { mutableStateOf("") }
+    var selling by remember { mutableStateOf("") }
     var quantity by remember { mutableStateOf("") }
-    var minimumStock by remember { mutableStateOf("5") }
+    var minimum by remember { mutableStateOf("5") }
     var unit by remember { mutableStateOf("Piece") }
-    var rack by remember { mutableStateOf("") }
-    var error by remember { mutableStateOf("") }
-    var saving by remember { mutableStateOf(false) }
+    var message by remember { mutableStateOf("") }
 
     Scaffold(
         containerColor = Navy,
         topBar = {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = White)
-                }
-                Text("Add Product", color = White, fontSize = 23.sp, fontWeight = FontWeight.Bold)
-            }
+            TopAppBar(
+                title = { Text("Add Product") },
+                navigationIcon = {
+                    TextButton(onClick = onBack) { Text("BACK") }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Navy,
+                    titleContentColor = White,
+                    navigationIconContentColor = Gold
+                )
+            )
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
+        androidx.compose.foundation.lazy.LazyColumn(
+            Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 20.dp),
+                .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            item {
-                Text("PRODUCT DETAILS", color = Saffron, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
-            }
+            item { Input(name, { name = it }, "Product name *") }
+            item { Input(category, { category = it }, "Category") }
+            item { Input(sku, { sku = it }, "SKU / Item code") }
+            item { Input(barcode, { barcode = it }, "Barcode / QR value") }
+            item { Input(purchase, { purchase = it }, "Purchase price ₹") }
+            item { Input(selling, { selling = it }, "Selling price ₹") }
+            item { Input(quantity, { quantity = it }, "Quantity *") }
+            item { Input(minimum, { minimum = it }, "Minimum stock") }
+            item { Input(unit, { unit = it }, "Unit") }
 
             item {
-                AppField(name, { name = it }, "Product name *")
-            }
-
-            item {
-                AppField(sku, { sku = it }, "SKU / Item code")
-            }
-
-            item {
-                AppField(barcode, { barcode = it }, "Barcode / QR value")
-            }
-
-            item {
-                AppField(category, { category = it }, "Category")
-            }
-
-            item {
-                AppField(purchasePrice, { purchasePrice = it }, "Purchase price (₹)", KeyboardType.Decimal)
-            }
-
-            item {
-                AppField(sellingPrice, { sellingPrice = it }, "Selling price (₹)", KeyboardType.Decimal)
-            }
-
-            item {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Box(Modifier.weight(1f)) {
-                        AppField(quantity, { quantity = it }, "Quantity *", KeyboardType.Number)
-                    }
-                    Box(Modifier.weight(1f)) {
-                        AppField(minimumStock, { minimumStock = it }, "Minimum stock", KeyboardType.Number)
-                    }
-                }
-            }
-
-            item {
-                AppField(unit, { unit = it }, "Unit (Piece, Box, Kg, etc.)")
-            }
-
-            item {
-                AppField(rack, { rack = it }, "Rack / shelf")
-            }
-
-            item {
-                if (error.isNotBlank()) {
-                    Text(error, color = Red, fontSize = 13.sp)
+                if (message.isNotBlank()) {
+                    Text(message, color = Red)
                 }
             }
 
             item {
                 Button(
                     onClick = {
-                        if (name.isBlank()) {
-                            error = "Please enter a product name."
-                            return@Button
-                        }
-
                         val qty = quantity.toIntOrNull()
-                        if (qty == null || qty < 0) {
-                            error = "Enter a valid non-negative quantity."
-                            return@Button
-                        }
+                        val buy = purchase.toDoubleOrNull() ?: 0.0
+                        val sell = selling.toDoubleOrNull() ?: 0.0
+                        val min = minimum.toIntOrNull() ?: 5
 
-                        val purchase = purchasePrice.toDoubleOrNull() ?: 0.0
-                        val selling = sellingPrice.toDoubleOrNull() ?: 0.0
-                        val minimum = minimumStock.toIntOrNull() ?: 5
-
-                        if (purchase < 0 || selling < 0 || minimum < 0) {
-                            error = "Prices and minimum stock cannot be negative."
-                            return@Button
-                        }
-
-                        saving = true
-                        error = ""
-
-                        viewModel.addProduct(
-                            Product(
-                                name = name.trim(),
-                                sku = sku.trim(),
-                                barcode = barcode.trim(),
-                                category = category.trim().ifBlank { "Other" },
-                                purchasePrice = purchase,
-                                sellingPrice = selling,
-                                quantity = qty,
-                                minimumStock = minimum,
-                                unit = unit.trim().ifBlank { "Piece" },
-                                rack = rack.trim()
-                            )
-                        ) { success ->
-                            saving = false
-                            if (success) {
-                                onBack()
-                            } else {
-                                error = "Couldn't save the product. Check if the item already exists."
+                        if (name.isBlank() || qty == null || qty < 0 ||
+                            buy < 0 || sell < 0 || min < 0
+                        ) {
+                            message = "Enter a product name and valid non-negative values."
+                        } else {
+                            vm.addProduct(
+                                com.hindustanhardware.inventory.data.Product(
+                                    name = name.trim(),
+                                    category = category.trim().ifBlank { "Other" },
+                                    sku = sku.trim(),
+                                    barcode = barcode.trim(),
+                                    purchasePrice = buy,
+                                    sellingPrice = sell,
+                                    quantity = qty,
+                                    minimumStock = min,
+                                    unit = unit.trim().ifBlank { "Piece" }
+                                )
+                            ) { success ->
+                                if (success) onBack()
+                                else message = "Couldn't save this product."
                             }
                         }
                     },
-                    enabled = !saving,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(17.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Saffron,
-                        contentColor = Navy
-                    )
+                    modifier = Modifier.fillMaxWidth().height(54.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Gold, contentColor = Navy)
                 ) {
-                    Text(
-                        if (saving) "SAVING..." else "SAVE PRODUCT",
-                        fontWeight = FontWeight.ExtraBold,
-                        letterSpacing = 1.sp
-                    )
+                    Text("SAVE PRODUCT", fontWeight = FontWeight.Bold)
                 }
-            }
-
-            item {
-                Text(
-                    "Saved on this phone. Internet is not required.",
-                    color = Muted,
-                    fontSize = 12.sp
-                )
-                Spacer(Modifier.height(24.dp))
             }
         }
     }
 }
 
 @Composable
-private fun AppField(
+private fun Input(
     value: String,
     onValueChange: (String) -> Unit,
-    label: String,
-    keyboardType: KeyboardType = KeyboardType.Text
+    label: String
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = Modifier.fillMaxWidth(),
         label = { Text(label) },
+        modifier = Modifier.fillMaxWidth(),
         singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        colors = fieldColors()
-    )
-}
-
-@Composable
-private fun fieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedTextColor = White,
-    unfocusedTextColor = White,
-    focusedBorderColor = Saffron,
-    unfocusedBorderColor = Color(0xFF35465D),
-    focusedLabelColor = Saffron,
-    unfocusedLabelColor = Muted,
-    cursorColor = Saffron,
-    focusedContainerColor = Panel,
-    unfocusedContainerColor = Panel
-)
-
-@Composable
-private fun BottomNavigationBar(
-    selected: String,
-    onHome: () -> Unit,
-    onInventory: () -> Unit
-) {
-    Surface(color = Navy2, shadowElevation = 10.dp) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            NavigationItem(
-                icon = { Icon(Icons.Default.Home, contentDescription = null) },
-                label = "Home",
-                selected = selected == "Home",
-                onClick = onHome
-            )
-            NavigationItem(
-                icon = { Icon(Icons.Default.Inventory2, contentDescription = null) },
-                label = "Inventory",
-                selected = selected == "Inventory",
-                onClick = onInventory
-            )
-        }
-    }
-}
-
-@Composable
-private fun NavigationItem(
-    icon: @Composable () -> Unit,
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .clickable(onClick = onClick)
-            .padding(horizontal = 25.dp, vertical = 5.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            androidx.compose.runtime.CompositionLocalProvider(
-                androidx.compose.material3.LocalContentColor provides
-                    if (selected) Saffron else Muted
-            ) {
-                icon()
-            }
-        }
-        Text(
-            label,
-            color = if (selected) Saffron else Muted,
-            fontSize = 11.sp,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = White,
+            unfocusedTextColor = White,
+            focusedBorderColor = Gold,
+            unfocusedBorderColor = Muted,
+            focusedLabelColor = Gold,
+            unfocusedLabelColor = Muted,
+            cursorColor = Gold
         )
-    }
+    )
 }
